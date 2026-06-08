@@ -9,9 +9,7 @@ const orderRoutes = require("./routes/orderRoutes")
 // Middleware
 app.use(cors({
     origin:
-        "*",
-    
-    credentials: true
+        "*"
 }));
 
 app.use(express.json());
