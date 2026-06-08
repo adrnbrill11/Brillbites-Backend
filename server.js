@@ -8,8 +8,11 @@ const orderRoutes = require("./routes/orderRoutes")
 
 // Middleware
 app.use(cors({
-    origin:
-        "*"
+  origin: [
+    "https://brillbites.vercel.app",
+    "http://localhost:5173"
+  ],
+  credentials: true
 }));
 
 app.use(express.json());
