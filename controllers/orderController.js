@@ -19,9 +19,10 @@ const createOrder = async (req, res) => {
       });
     }
 
-    const orders = await prisma.order.findMany({
+// getOrders — baguhin mo
+const orders = await prisma.order.findMany({
   include: {
-    items: true,  // ← simple lang
+    items: true,
     user: {
       select: {
         id: true,
@@ -39,7 +40,7 @@ const createOrder = async (req, res) => {
 const order = await prisma.order.findUnique({
   where: { id: parseInt(req.params.id) },
   include: {
-    items: true,  // ← simple lang
+    items: true,
     user: {
       select: {
         id: true,
