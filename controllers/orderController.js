@@ -1,55 +1,38 @@
 const prisma = require("../config/prisma");
 
-//Create Order
-
+// ✅ Create Order
 const createOrder = async (req, res) => {
   try {
-    console.log("REQ BODY:", req.body); // ← dagdag mo to
-    const {
-      items,
-      total,
-      paymentMethod
-    } = req.body;
-
-    console.log("ITEMS:", items); // ← dagdag mo to
+    const { items, total, paymentMethod } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({
-        message: "No Items in order",
+        message: "No items in order",
       });
     }
 
-// getOrders — baguhin mo
-const orders = await prisma.order.findMany({
-  include: {
-    items: true,
-    user: {
-      select: {
-        id: true,
-        name: true,
-        email: true,
+    const order = await prisma.order.create({
+      data: {
+        total,
+        paymentMethod,
+        items: {
+          create: items.map((item) => ({
+            quantity: item.quantity,
+            price: item.price,
+            product: {
+              connect: { id: item.productId },
+            },
+          })),
+        },
       },
-    },
-  },
-  orderBy: {
-    createdAt: "desc",
-  },
-})
-
-// getOrderById — same fix
-const order = await prisma.order.findUnique({
-  where: { id: parseInt(req.params.id) },
-  include: {
-    items: true,
-    user: {
-      select: {
-        id: true,
-        name: true,
-        email: true,
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
       },
-    },
-  },
-})
+    });
 
     res.status(201).json({
       message: "Order created successfully",
@@ -63,8 +46,7 @@ const order = await prisma.order.findUnique({
   }
 };
 
-//Get all orders
-
+// ✅ Get All Orders
 const getOrders = async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
@@ -87,25 +69,20 @@ const getOrders = async (req, res) => {
       },
     });
 
-    res.json({
-      orders
-    });
+    res.json({ orders });
   } catch (error) {
     res.status(500).json({
       message: "Failed to get orders",
-      error: error,
+      error: error.message,
     });
   }
 };
 
-//get Order By ID
-
+// ✅ Get Order By ID
 const getOrderById = async (req, res) => {
   try {
     const order = await prisma.order.findUnique({
-      where: {
-        id: parseInt(req.params.id)
-      },
+      where: { id: parseInt(req.params.id) },
       include: {
         items: {
           include: {
@@ -128,9 +105,7 @@ const getOrderById = async (req, res) => {
       });
     }
 
-    res.json({
-      order
-    });
+    res.json({ order });
   } catch (error) {
     res.status(500).json({
       message: "Failed to get order",
