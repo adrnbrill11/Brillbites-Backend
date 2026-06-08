@@ -1,121 +1,82 @@
-const prisma = require("../config/prisma");
+const prisma = require("../config/prisma")
 
-// ✅ Create Order
+// Create Order
 const createOrder = async (req, res) => {
   try {
-    const { items, total, paymentMethod } = req.body;
+    const { items, total, paymentMethod } = req.body
 
     if (!items || items.length === 0) {
-      return res.status(400).json({
-        message: "No items in order",
-      });
+      return res.status(400).json({ message: "No items in order" })
     }
 
     const order = await prisma.order.create({
       data: {
+        userId: req.user.id,
         total,
         paymentMethod,
+        status: "PAID",
         items: {
           create: items.map((item) => ({
+            name: item.name,
             quantity: item.quantity,
             price: item.price,
-            product: {
-              connect: { id: item.productId },
-            },
           })),
         },
       },
       include: {
-        items: {
-          include: {
-            product: true,
-          },
+        items: true,
+        user: {
+          select: { id: true, name: true, email: true },
         },
       },
-    });
+    })
 
-    res.status(201).json({
-      message: "Order created successfully",
-      order,
-    });
+    res.status(201).json({ message: "Order created successfully", order })
   } catch (error) {
-    res.status(500).json({
-      message: "Order creation failed",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Order creation failed", error: error.message })
   }
-};
+}
 
-// ✅ Get All Orders
+// Get All Orders
 const getOrders = async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
       include: {
-        items: {
-          include: {
-            product: true,
-          },
-        },
+        items: true,
         user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
+          select: { id: true, name: true, email: true },
         },
       },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+      orderBy: { createdAt: "desc" },
+    })
 
-    res.json({ orders });
+    res.json({ orders })
   } catch (error) {
-    res.status(500).json({
-      message: "Failed to get orders",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Failed to get orders", error: error.message })
   }
-};
+}
 
-// ✅ Get Order By ID
+// Get Order By ID
 const getOrderById = async (req, res) => {
   try {
     const order = await prisma.order.findUnique({
       where: { id: parseInt(req.params.id) },
       include: {
-        items: {
-          include: {
-            product: true,
-          },
-        },
+        items: true,
         user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
+          select: { id: true, name: true, email: true },
         },
       },
-    });
+    })
 
     if (!order) {
-      return res.status(404).json({
-        message: "Order not found",
-      });
+      return res.status(404).json({ message: "Order not found" })
     }
 
-    res.json({ order });
+    res.json({ order })
   } catch (error) {
-    res.status(500).json({
-      message: "Failed to get order",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Failed to get order", error: error.message })
   }
-};
+}
 
-module.exports = {
-  createOrder,
-  getOrders,
-  getOrderById,
-};
+module.exports = { createOrder, getOrders, getOrderById }
