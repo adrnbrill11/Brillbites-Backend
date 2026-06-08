@@ -7,7 +7,13 @@ const authRoutes = require("./routes/authRoutes");
 const orderRoutes = require("./routes/orderRoutes")
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin:
+        "*",
+    
+    credentials: true
+}));
+
 app.use(express.json());
 
 // Routes
