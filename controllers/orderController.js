@@ -5,7 +5,11 @@ const prisma = require("../config/prisma");
 const createOrder = async (req, res) => {
   try {
     console.log("REQ BODY:", req.body); // ← dagdag mo to
-    const { items, total, paymentMethod } = req.body;
+    const {
+      items,
+      total,
+      paymentMethod
+    } = req.body;
 
     console.log("ITEMS:", items); // ← dagdag mo to
 
@@ -15,30 +19,36 @@ const createOrder = async (req, res) => {
       });
     }
 
-    const order = await prisma.order.create({
-      data: {
-        userId: req.user.id,
-        total,
-        status: "PAID",
-        items: {
-          create: items.map((item) => ({
-            name: item.name,
-            quantity: item.quantity,
-            price: item.price,
-          })),
-        },
+    const orders = await prisma.order.findMany({
+  include: {
+    items: true,  // ← simple lang
+    user: {
+      select: {
+        id: true,
+        name: true,
+        email: true,
       },
-      include: {
-        items: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
+    },
+  },
+  orderBy: {
+    createdAt: "desc",
+  },
+})
+
+// getOrderById — same fix
+const order = await prisma.order.findUnique({
+  where: { id: parseInt(req.params.id) },
+  include: {
+    items: true,  // ← simple lang
+    user: {
+      select: {
+        id: true,
+        name: true,
+        email: true,
       },
-    });
+    },
+  },
+})
 
     res.status(201).json({
       message: "Order created successfully",
@@ -76,7 +86,9 @@ const getOrders = async (req, res) => {
       },
     });
 
-    res.json({ orders });
+    res.json({
+      orders
+    });
   } catch (error) {
     res.status(500).json({
       message: "Failed to get orders",
@@ -90,7 +102,9 @@ const getOrders = async (req, res) => {
 const getOrderById = async (req, res) => {
   try {
     const order = await prisma.order.findUnique({
-      where: { id: parseInt(req.params.id) },
+      where: {
+        id: parseInt(req.params.id)
+      },
       include: {
         items: {
           include: {
@@ -113,7 +127,9 @@ const getOrderById = async (req, res) => {
       });
     }
 
-    res.json({ order });
+    res.json({
+      order
+    });
   } catch (error) {
     res.status(500).json({
       message: "Failed to get order",
