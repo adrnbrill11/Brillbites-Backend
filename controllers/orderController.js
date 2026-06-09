@@ -84,6 +84,8 @@ const clearOrders = async(req, res) => {
   try{
     await prisma.orderItem.deleteMany()
     await prisma.order.deleteMany()
+    await prisma.$executeRaw`ALTER SEQUENCE "Order_id_seq" RESTART WITH 1` 
+
     res.json({message: "All orders cleared!"})
   }catch(error){
     res.status(500).json({message: "Failed to clear orders! ", error: error.message})
