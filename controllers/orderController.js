@@ -79,4 +79,17 @@ const getOrderById = async (req, res) => {
   }
 }
 
-module.exports = { createOrder, getOrders, getOrderById }
+//Clear Orders
+const clearOrders = async(req, res) => {
+  try{
+    await prisma.orderItem.deleteMany()
+    await prisma.order.deleteMany()
+    res.json({message: "All orders cleared!"})
+  }catch(error){
+    res.status(500).json({message: "Failed to clear orders! ", error: error.message})
+  }
+}
+
+
+
+module.exports = { createOrder, getOrders, getOrderById, clearOrders }

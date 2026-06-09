@@ -6,7 +6,7 @@ const prisma = require("./config/prisma");
 const authRoutes = require("./routes/authRoutes");
 const orderRoutes = require("./routes/orderRoutes")
 
-// Middleware
+// Middleware mauunalagi bago routes
 app.use(cors({
   origin: [
     "https://brillbites.vercel.app",
