@@ -17,7 +17,7 @@ const addProduct = async (req, res) => {
   try {
     const { name, category, price, stock } = req.body
     const product = await prisma.product.create({
-      data: { name, category, price, stock: stock || 0 }
+      data: { name, category, price: Number(price), stock: stock === undefined || stock === "" ? 0 : Number(stock) }
     })
     res.status(201).json({ message: "Product added!", product })
   } catch (error) {
@@ -31,7 +31,8 @@ const updateProduct = async (req, res) => {
     const { name, category, price, stock, isAvailable } = req.body
     const product = await prisma.product.update({
       where: { id: parseInt(req.params.id) },
-      data: { name, category, price, stock, isAvailable }
+      data: { name, category, price:Number(price), stock: stock === undefined || stock === "" ? 0 : Number(stock),
+      isAvailable }
     })
     res.json({ message: "Product updated!", product })
   } catch (error) {
