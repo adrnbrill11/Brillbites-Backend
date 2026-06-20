@@ -9,6 +9,22 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ message: "No items in order" })
     }
 
+    for (const item of items) {
+      const product = await prisma.product.findUnique({
+        where: { id: item.id }
+      })
+
+      if (!product) {
+        return res.status(404).json({ message: `${item.name} not found` })
+      }
+
+      if (product.stock < item.quantity) {
+        return res.status(400).json({
+          message: `Not enough stock for ${item.name}`
+        })
+      }
+    }
+
     const order = await prisma.order.create({
       data: {
         userId: req.user.id,
@@ -31,11 +47,24 @@ const createOrder = async (req, res) => {
       },
     })
 
+     for (const item of items) {
+      await prisma.product.update({
+        where: { id: item.id },
+        data: {
+          stock: {
+            decrement: item.quantity
+          }
+        }
+      })
+    }
+
     res.status(201).json({ message: "Order created successfully", order })
   } catch (error) {
     res.status(500).json({ message: "Order creation failed", error: error.message })
   }
 }
+
+
 
 // Get All Orders
 const getOrders = async (req, res) => {
