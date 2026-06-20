@@ -11,7 +11,7 @@ const createOrder = async (req, res) => {
 
     for (const item of items) {
       const product = await prisma.product.findUnique({
-        where: { id: item.id }
+        where: { name: item.id }
       })
 
       if (!product) {
