@@ -10,8 +10,8 @@ const createOrder = async (req, res) => {
     }
 
     for (const item of items) {
-      const product = await prisma.product.findUnique({
-        where: { name: item.id }
+      const product = await prisma.product.findFirst({
+        where: { name: item.name }
       })
 
       if (!product) {
@@ -49,7 +49,7 @@ const createOrder = async (req, res) => {
 
      for (const item of items) {
       await prisma.product.update({
-        where: { id: item.id },
+        where: { id: product.id },
         data: {
           stock: {
             decrement: item.quantity
@@ -88,7 +88,7 @@ const getOrders = async (req, res) => {
 // Get Order By ID
 const getOrderById = async (req, res) => {
   try {
-    const order = await prisma.order.findUnique({
+    const order = await prisma.order.findFirst({
       where: { id: parseInt(req.params.id) },
       include: {
         items: true,
