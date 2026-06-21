@@ -1,16 +1,5 @@
 const prisma = require("../config/prisma")
 
-const findProductByName = (client, name) => {
-  return client.product.findFirst({
-    where: {
-      name: {
-        equals: name.trim(),
-        mode: "insensitive",
-      },
-    },
-  })
-}
-
 // Create Order
 const createOrder = async (req, res) => {
   try {
@@ -20,59 +9,26 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ message: "No items in order" })
     }
 
-    const normalizedItems = items.map((item) => ({
-      name: item.name.trim(),
-      quantity: Number(item.quantity),
-      price: Number(item.price),
-    }))
-
-    for (const item of normalizedItems) {
-      const product = await findProductByName(prisma, item.name)
-
-      if (!product) {
-        return res.status(404).json({ message: `${item.name} not found` })
-      }
-
-      if (product.stock < item.quantity) {
-        return res.status(400).json({
-          message: `Not enough stock for ${item.name}`
-        })
-      }
-    }
-
-    const order = await prisma.$transaction(async (tx) => {
-      const createdOrder = await tx.order.create({
-        data: {
-          userId: req.user.id,
-          total: Number(total),
-          paymentMethod,
-          status: "PAID",
-          items: {
-            create: normalizedItems,
-          },
+    const order = await prisma.order.create({
+      data: {
+        userId: req.user.id,
+        total,
+        paymentMethod,
+        status: "PAID",
+        items: {
+          create: items.map((item) => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+          })),
         },
-        include: {
-          items: true,
-          user: {
-            select: { id: true, name: true, email: true },
-          },
+      },
+      include: {
+        items: true,
+        user: {
+          select: { id: true, name: true, email: true },
         },
-      })
-
-      for (const item of normalizedItems) {
-        const product = await findProductByName(tx, item.name)
-
-        await tx.product.update({
-          where: { id: product.id },
-          data: {
-            stock: {
-              decrement: item.quantity
-            }
-          }
-        })
-      }
-
-      return createdOrder
+      },
     })
 
     res.status(201).json({ message: "Order created successfully", order })
@@ -106,7 +62,7 @@ const getOrders = async (req, res) => {
 const getOrderById = async (req, res) => {
   try {
     const order = await prisma.order.findUnique({
-      where: { id: Number(req.params.id) },
+      where: { id: parseInt(req.params.id) },
       include: {
         items: true,
         user: {
